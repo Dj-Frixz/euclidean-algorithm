@@ -108,3 +108,9 @@ def optimal_t(j, k, n):
     if j % eq.value != 0:
         return -1, eq.value   # doesn't exist
     return eq.f1.factor * (j//eq.value) % n, k * n // eq.value  # t, lcm
+
+def lcm(args):
+    lcm = 1
+    for n in args:
+        lcm = n * lcm // bezout_id(n, lcm).value
+    return lcm
