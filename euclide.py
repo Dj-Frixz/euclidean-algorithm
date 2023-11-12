@@ -104,6 +104,7 @@ def bezout_id(k, n):
 
 def optimal_t(j, k, n):
     eq = bezout_id(k % n, n)
+    j = j % n
     if j % eq.value != 0:
-        return -1 # doesn't exist
-    return eq.f1.factor * (j//eq.value) % n
+        return -1, eq.value   # doesn't exist
+    return eq.f1.factor * (j//eq.value) % n, k * n // eq.value  # t, lcm
