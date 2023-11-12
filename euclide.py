@@ -92,17 +92,18 @@ class pair:
     def value(self) -> int:
         return self.f1.value - self.f2.value
     
-def bezout_reduction(k, n):
-    # n mod k != 0
-    r0 = pair(n, factors(k, n//k))
-    r1 = k - r0 * (k//r0.value)
+def bezout_id(k, n):
+    if k == 0:
+        return pair(factors(k, 0), n)
+    r0 = pair(k, factors(n, 0))
+    r1 = n - r0 * (n//r0.value)
     while(r1.value != 0):
         r2 = r0 - r1 * (r0.value//r1.value)
         r0, r1 = r1, r2
-    return r0.rotate()
+    return r0
 
 def optimal_t(j, k, n):
-    eq = bezout_reduction(k % n, n)
+    eq = bezout_id(k % n, n)
     if j % eq.value != 0:
         return -1 # doesn't exist
     return eq.f1.factor * (j//eq.value) % n
