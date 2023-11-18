@@ -50,23 +50,40 @@ class factors:
 
 class pair:
 
-    def __init__(self, f1:factors, f2:factors) -> None:
-        self.f1 = factors(f1)
-        self.f2 = factors(f2)
+    def __init__(self, fs) -> None:
+        if type(fs) == dict:
+            self.fs = fs
+        elif type(fs) == list or type(fs) == tuple:
+            self.fs = {}
+            for n in fs:
+                f = factors(n)
+                self._add_factor(self.fs, f)
     
     def __mul__(self, __value) -> object:
-        return pair(self.f1 * __value, self.f2 * __value)
+        if type(__value) == int:
+            new_fs = self.fs.copy()
+            for key in new_fs:
+                new_fs[key] *= __value
+            return pair(new_fs)
     
     def __add__(self, __value) -> object:
+        new_fs = self.fs.copy()
         if type(__value) == int or type(__value) == factors:
             __value = factors(__value)
-            if self.f1.num == __value.num:
-                return pair(self.f1 + __value, self.f2)
-            if self.f2.num == __value.num:
-                return pair(self.f1, self.f2 - __value)
-        if type(__value) == pair:
-            return self + __value.f1 - __value.f2
+            self._add_factor(new_fs, __value)
+            return pair(new_fs)
+        elif type(__value) == pair:
+            new_pair = pair(self.fs)
+            for num in __value.fs:
+                new_pair = new_pair + factors(num, __value.fs[num])
+            return new_pair
     
+    def _add_factor(self, fs:dict, f:factors):
+        if f.num in fs:
+            fs[f.num] += f.factor
+        else:
+            fs[f.num] = f.factor
+
     def __radd__(self, __value) -> object:
         return self + __value
     
@@ -80,7 +97,10 @@ class pair:
         return self * -1
     
     def __str__(self) -> str:
-        return '{} - {}'.format(self.f1, self.f2)
+        string = ''
+        for num in self.fs:
+            string += '{}({}) + '.format(num, self.fs[num])
+        return string[:-3]
     
     def __repr__(self) -> str:
         return 'pair[ {} = {} ]'.format(self.value, str(self))
@@ -90,12 +110,15 @@ class pair:
     
     @property
     def value(self) -> int:
-        return self.f1.value - self.f2.value
+        gcd = 0
+        for num in self.fs:
+            gcd += num * self.fs[num]
+        return gcd
     
 def bezout_id(k, n):
     if k == 0:
-        return pair(factors(k, 0), n)
-    r0 = pair(k, factors(n, 0))
+        return pair((factors(k, 0), n))
+    r0 = pair((k, factors(n, 0)))
     r1 = n - r0 * (n//r0.value)
     while(r1.value != 0):
         r2 = r0 - r1 * (r0.value//r1.value)
@@ -107,7 +130,7 @@ def optimal_t(j, k, n):
     j = j % n
     if j % eq.value != 0:
         return -1, eq.value   # doesn't exist
-    return eq.f1.factor * (j//eq.value) % n, k * n // eq.value  # t, lcm
+    return eq.f1.factor * (j//eq.value) % (n//eq.value), k * n // eq.value  # t, lcm
 
 def lcm(args):
     lcm = 1
